@@ -1,0 +1,21 @@
+{
+  "name": "i3s-core",
+  "version": "1.0.0",
+  "description": "this is the core of I3S system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Agung K.",
+  "license": "ISC",
+  "dependencies": {
+    "delay": "^3.0.0",
+    "express": "^4.16.3",
+    "fcm-node": "^1.2.1",
+    "firebase": "^5.2.0",
+    "mqtt": "^2.18.2",
+    "onoff": "^3.1.0",
+    "pigpio": "^1.1.0",
+    "pusher": "^2.0.1"
+  }
+}

@@ -1,0 +1,157 @@
+const express = require('express')
+const app = express()
+
+app.get('/', (req, res) => res.send('Hello World!'))
+app.listen(3000, ()=> console.log('Listening on port 3000'))
+
+
+const PiCamera = require('pi-camera')
+const myCamera = new PiCamera({
+	mode: 'photo',
+	output: `${ __dirname }/test.jpg`,
+	width: 720,
+	height: 480,
+	nopreview: true,
+	quality: 30,
+})
+
+
+
+
+
+
+
+
+
+/* ================================================================ */
+/* ========================= firebase -below- ===================== */
+const firebase = require('firebase/app')
+require('firebase/database')
+
+var db
+
+var cam_name
+var dir_name
+
+var snapExecNum
+
+
+function init(){
+	var config = {
+		apiKey: "AIzaSyACoYhtGhdfpp-iIcdKzcbvX055pL90Jsc",
+		authDomain: "i3s-cloud.firebaseapp.com",
+		databaseURL: "https://i3s-cloud.firebaseio.com/",
+		storageBucket: "i3s-cloud.appspot.com"
+	};
+	
+	firebase.initializeApp(config);
+	this.db = firebase.database()
+	
+	this.cam_name = "camera01"
+	this.dir_name = `${ __dirname }/snapImage/`
+	
+	this.snapExecNum = 0
+		
+}
+
+function listenSensor(){
+	var sensor1Ref = this.db.ref('sensors/sensor0001')
+	sensor1Ref.on('value', function(snapshot){
+		console.log(snapshot.val())
+	})
+}
+
+init()
+//listenSensor()
+
+/* =============================================================== */
+/* ======================= Join Function ========================= */
+
+function snapPhoto(){
+	var d = new Date()
+	var date = d.getDate() + '-' + d.getMonth() + '-' + d.getFullYear()
+	var time = (d.getHours() + 7) + '-' + d.getMinutes() + '-' + d.getSeconds()
+	
+	var img_name = this.cam_name + '_' + date + '_' + time + '.jpg'
+	
+	myCamera.set('output',this.dir_name + img_name)
+	myCamera.snap()
+	.then((result) => {
+		if(this.snapExecNum>0)
+			this.snapExecNum--
+		console.log(img_name + " captured")
+		uploadToFTP(this.dir_name, img_name)
+	})
+	.catch((error) =>{
+		if(this.snapExecNum>0)
+			this.snapExecNum--
+		console.log("error: " + error)
+	})
+}
+
+const delay = require('delay')
+
+function doSnap(){
+	this.snapExecNum++
+	(async() => {
+		await delay(6000 * (this.snapExecNum -1))
+		snapPhoto()
+	})();
+	
+	/*
+	while(!this.isCameraReady){
+	}
+	snapPhoto()
+	*/
+}
+
+/* ======================== ftp npm ======================== */
+var Client = require('ftp')
+var fs = require('fs')
+var c = new Client()
+
+	
+	c.connect({
+		host: 'retrolab.xyz',
+		port: 21,
+		user: 'scholar@i3s.retrolab.xyz',
+		password: 'scholar',
+		keepalive: 100
+	})
+	
+
+
+function uploadToFTP(dir_name, img_name){
+	//c.on('ready', function(){
+	console.log("start uploading")
+		c.put(dir_name + img_name, img_name, function(err){
+			if (err) throw err
+			console.log(img_name + ' uploaded')
+			writeLastSnap('http://i3s.retrolab.xyz/snapImage/' + img_name)
+			//c.end()
+		})
+	//})
+}
+
+function writeLastSnap(imgUrl){
+	return this.db.ref('/systems/system0001').update({last_snap: imgUrl})
+}
+
+/* ================================================================ */
+/* ========================= MQTT -below- ========================= */
+const mqtt = require('mqtt')
+const mqtt_server = "mqtt://test.mosquitto.org"
+const mqtt_camera_path = "camera_channel"
+
+var client = mqtt.connect(mqtt_server)
+
+client.on('connect', function(){
+	client.subscribe(mqtt_camera_path)
+})
+
+client.on('message', function(topic, message){
+	if(topic == mqtt_camera_path){
+		console.log('snap requested')
+		doSnap()
+	}
+})

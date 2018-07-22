@@ -1,0 +1,28 @@
+[33m[nodemon] 1.18.1[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching: *.*[39m
+[32m[nodemon] starting `node /home/pi/i3s-core/app.js`[39m
+user memerintah 0
+user command idle
+events.js:167
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE :::3000
+    at Server.setupListenHandle [as _listen2] (net.js:1335:14)
+    at listenInCluster (net.js:1383:12)
+    at Server.listen (net.js:1470:7)
+    at Function.listen (/home/pi/i3s-core/node_modules/express/lib/application.js:618:24)
+    at Object.<anonymous> (/home/pi/i3s-core/app.js:7:5)
+    at Module._compile (internal/modules/cjs/loader.js:689:30)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:700:10)
+    at Module.load (internal/modules/cjs/loader.js:599:32)
+    at tryModuleLoad (internal/modules/cjs/loader.js:538:12)
+    at Function.Module._load (internal/modules/cjs/loader.js:530:3)
+Emitted 'error' event at:
+    at emitErrorNT (net.js:1362:8)
+    at process._tickCallback (internal/process/next_tick.js:63:19)
+    at Function.Module.runMain (internal/modules/cjs/loader.js:745:11)
+    at startup (internal/bootstrap/node.js:236:19)
+    at bootstrapNodeJSCore (internal/bootstrap/node.js:560:3)
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m

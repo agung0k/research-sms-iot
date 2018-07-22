@@ -1,0 +1,171 @@
+const express = require('express')
+const app = express()
+
+app.get('/', (req, res) => res.send('Hello World!'))
+app.listen(3000, ()=> console.log('Listening on port 3000'))
+
+
+const PiCamera = require('pi-camera')
+const myCamera = new PiCamera({
+	mode: 'photo',
+	output: `${ __dirname }/test.jpg`,
+	width: 720,
+	height: 480,
+	nopreview: true,
+})
+
+/*
+myCamera.snap()
+	.then((result) => {
+		console.log("berhasil")
+		console.log(result)
+	})
+	.catch((error) =>{
+		console.log("error: " + error)
+	})
+*/
+
+/* ================================================================ */
+/* ========================= firebase -below- ===================== */
+const firebase = require('firebase/app')
+require('firebase/database')
+require('firebase/storage')
+
+var db
+var storage
+
+function init(){
+	var config = {
+		apiKey: "AIzaSyACoYhtGhdfpp-iIcdKzcbvX055pL90Jsc",
+		authDomain: "i3s-cloud.firebaseapp.com",
+		databaseURL: "https://i3s-cloud.firebaseio.com/",
+		storageBucket: "i3s-cloud.appspot.com"
+	};
+	
+	firebase.initializeApp(config);
+	this.db = firebase.database()
+	this.storage = firebase.storage()
+}
+
+function listenSensor(){
+	var sensor1Ref = this.db.ref('sensors/sensor0001')
+	sensor1Ref.on('value', function(snapshot){
+		console.log(snapshot.val())
+	})
+}
+
+init()
+//listenSensor()
+
+
+
+
+
+
+/* =========================== */
+/*
+const File = require('file-class')
+const jsftp = require('jsftp')
+
+const Ftp = new jsftp({
+  host: "srv25.niagahoster.com",
+  port: 21,
+  user: "scholar@i3s.retrolab.xyz",
+  pass: "scholar"
+  });
+*/
+/* =============================================================== */
+/* ======================= Join Function ========================= */
+
+
+function snapPhoto(){
+	myCamera.set('output',`${ __dirname }/snapImage/arighty.jpg`)
+	myCamera.snap()
+	.then((result) => {
+		console.log("berhasil")
+		var imgPath = `${ __dirname }/snapImage/arighty.jpg`
+		//uploadImage(imgPath)
+		//upload(imgPath)
+		uploadToFTP(imgPath)
+	})
+	.catch((error) =>{
+		console.log("error: " + error)
+	})
+}
+
+function uploadImage(imgPath){
+	/*
+	var storageRef = this.storage.ref()
+	var snapImageRef = storageRef.child('aright.jpg')
+	
+	*/
+	//var file = new File("/home/pi/core_camera/aright.jpg")
+	/*	
+	snapImageRef.put(file).then(function(snapshot){
+		console.log('Uploaded a blob or file!')
+		console.log(snapshot.downloadURL)
+	})
+	*/
+	
+	Ftp.put("aright.jpg", "aright.jpg", err => {
+		if(!err){
+			console.log("file transferred successfully!")
+		}
+		else{
+			console.log("file failed to transfer")
+		}
+		})
+}
+
+/*
+var request = require('request')
+var fs = require('fs')
+
+function upload(imgPath){
+	var req = request.post('http://i3s.retrolab.xyz/imgReceiver.php', function (err, resp, body) {
+		if (err) {
+			console.log('Error!');
+		} else {
+			console.log('URL: ' + body);
+			console.log('RES: ' + resp)
+		}
+	});
+	var form = req.form();
+	form.append('file', fs.createReadStream(imgPath));
+}
+*/
+
+
+/* ======================== ftp npm ======================== */
+var Client = require('ftp')
+var fs = require('fs')
+var c = new Client()
+
+function uploadToFTP(imgPath){
+	c.on('ready', function(){
+		c.put(imgPath, 'arighty.jpg', function(err){
+			if (err) throw err
+			console.log('image uploaded')
+			c.end()
+		})
+	})
+	
+	/*
+	c.connect({
+		host: 'ftp.thinkpositive.id',
+		port: 21,
+		user: 'sps@thinkpositive.id',
+		password: 'SunanAmpel'
+	})
+	*/
+	
+	c.connect({
+		host: 'retrolab.xyz',
+		port: 21,
+		user: 'scholar@i3s.retrolab.xyz',
+		password: 'scholar'
+	})
+}
+
+
+snapPhoto()
